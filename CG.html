@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Certificate Generator Pro</title>
+    <link rel="stylesheet" href="cg.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;700&family=Inter:wght@300;400;500&family=Roboto+Mono&family=Sora:wght@300;400&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+</head>
+<body>
+    <div class="background"></div>
+    
+    <!-- Navigation Dock -->
+    <nav class="nav-dock">
+        <ul>
+            <li data-target="welcome"><span>🏠</span> Welcome</li>
+            <li data-target="entry"><span>🔐</span> Login</li>
+            <li data-target="dashboard"><span>📊</span> Dashboard</li>
+            <li data-target="generator"><span>🛠️</span> Generator</li>
+            <li data-target="manager"><span>📁</span> Manager</li>
+            <li data-target="settings"><span>🔧</span> Settings</li>
+        </ul>
+    </nav>
+
+    <!-- Main Content Area -->
+    <main>
+        <!-- Welcome Screen -->
+        <section id="welcome" class="screen active">
+            <div class="glass-card">
+                <h1>Certificate Generator Pro</h1>
+                <p class="subheading">Create. Customize. Certify.</p>
+                <button id="getStarted" class="glow-button">Get Started →</button>
+            </div>
+            <div class="floating-blobs">
+                <div class="blob teal"></div>
+                <div class="blob rose"></div>
+                <div class="blob teal"></div>
+            </div>
+            <div class="floating-ribbons">
+                <div class="ribbon"></div>
+                <div class="ribbon"></div>
+            </div>
+        </section>
+
+        <!-- Entry Panel -->
+        <section id="entry" class="screen">
+            <div class="glass-card">
+                <div class="tab-header">
+                    <button class="tab-btn active" data-tab="login">Login</button>
+                    <button class="tab-btn" data-tab="register">Register</button>
+                    <button class="tab-btn" data-tab="verify">Verify</button>
+                </div>
+                
+                <div class="tab-content">
+                    <!-- Login Tab -->
+                    <div id="login" class="tab-pane active">
+                        <h2>Admin Login</h2>
+                        <form id="loginForm">
+                            <div class="form-group">
+                                <label for="loginEmail">Email</label>
+                                <input type="email" id="loginEmail" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="loginPassword">Password</label>
+                                <input type="password" id="loginPassword" required>
+                            </div>
+                            <button type="submit" class="glow-button">Login</button>
+                        </form>
+                    </div>
+                    
+                    <!-- Register Tab -->
+                    <div id="register" class="tab-pane">
+                        <h2>Admin Registration</h2>
+                        <form id="registerForm">
+                            <div class="form-group">
+                                <label for="registerEmail">Email</label>
+                                <input type="email" id="registerEmail" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="registerPassword">Password</label>
+                                <input type="password" id="registerPassword" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="confirmPassword">Confirm Password</label>
+                                <input type="password" id="confirmPassword" required>
+                            </div>
+                            <button type="submit" class="glow-button">Register</button>
+                        </form>
+                    </div>
+                    
+                    <!-- Verify Tab -->
+                    <div id="verify" class="tab-pane">
+                        <h2>Certificate Verification</h2>
+                        <form id="verifyForm">
+                            <div class="form-group">
+                                <label for="certId">Certificate ID</label>
+                                <input type="text" id="certId" placeholder="CERT-2025-0001" required>
+                            </div>
+                            <button type="submit" class="glow-button">Verify</button>
+                        </form>
+                        <div id="verifyResult" class="hidden">
+                            <div id="verifyStatus" class="status-card">
+                                <!-- Status will be inserted here -->
+                            </div>
+                            <div id="certPreview" class="hidden">
+                                <!-- Certificate preview will be inserted here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Dashboard -->
+        <section id="dashboard" class="screen">
+            <div class="glass-card">
+                <h2 id="welcomeAdmin">Welcome, Admin</h2>
+                <div class="confetti-animation"></div>
+                <div class="stats-container">
+                    <div class="stat-card">
+                        <h3>Total Certificates</h3>
+                        <p id="totalCerts">0</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3>This Week</h3>
+                        <p id="weeklyCerts">0</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Top Type</h3>
+                        <p id="topType">None</p>
+                    </div>
+                </div>
+                
+                <div class="quick-actions">
+                    <button id="newCertBtn" class="action-btn">➕ New Certificate</button>
+                    <button id="bulkUploadBtn" class="action-btn">📦 Bulk Upload</button>
+                    <button id="manageVerifyBtn" class="action-btn">✅ Manage Verification</button>
+                    <button id="viewAllBtn" class="action-btn">📋 View All</button>
+                </div>
+                
+                <div class="chart-container">
+                    <canvas id="certChart"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <!-- Certificate Generator -->
+        <section id="generator" class="screen">
+            <div class="generator-container">
+                <div class="steps-container">
+                    <div class="step-progress">
+                        <div class="step active" data-step="1">1</div>
+                        <div class="step" data-step="2">2</div>
+                        <div class="step" data-step="3">3</div>
+                        <div class="step" data-step="4">4</div>
+                        <div class="step" data-step="5">5</div>
+                    </div>
+                    
+                    <!-- Step 1: Candidate Details -->
+                    <div id="step1" class="step-content active">
+                        <h2>Candidate Details</h2>
+                        <form id="candidateForm">
+                            <div class="form-group">
+                                <label for="fullName">Full Name</label>
+                                <input type="text" id="fullName" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="candidateEmail">Email</label>
+                                <input type="email" id="candidateEmail">
+                            </div>
+                            <div class="form-group">
+                                <label for="internshipTitle">Course/Program Title</label>
+                                <input type="text" id="internshipTitle" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="orgName">Organization/Platform</label>
+                                <input type="text" id="orgName" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="providerName">Provider Name</label>
+                                <input type="text" id="providerName" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="providerDesignation">Provider Designation</label>
+                                <input type="text" id="providerDesignation" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Certificate ID</label>
+                                <input type="text" id="certIdDisplay" readonly>
+                            </div>
+                            <button type="button" class="next-btn glow-button">Next →</button>
+                        </form>
+                    </div>
+                    
+                    <!-- Step 2: Certificate Type -->
+                    <div id="step2" class="step-content">
+                        <h2>Certificate Type</h2>
+                        <div class="type-grid">
+                            <div class="type-card" data-type="technical">
+                                <h3>Technical Internship</h3>
+                                <p>For technical skill demonstration</p>
+                            </div>
+                            <div class="type-card" data-type="research">
+                                <h3>Research Internship</h3>
+                                <p>For research contributions</p>
+                            </div>
+                            <div class="type-card" data-type="ngo">
+                                <h3>NGO Volunteering</h3>
+                                <p>For volunteer work</p>
+                            </div>
+                            <div class="type-card" data-type="campus">
+                                <h3>Campus Ambassador</h3>
+                                <p>For campus representatives</p>
+                            </div>
+                            <div class="type-card" data-type="freelance">
+                                <h3>Freelance Project</h3>
+                                <p>For independent projects</p>
+                            </div>
+                            <div class="type-card" data-type="course">
+                                <h3>Course Completion</h3>
+                                <p>For course graduates</p>
+                            </div>
+                            <div class="type-card" data-type="bootcamp">
+                                <h3>Bootcamp</h3>
+                                <p>For intensive training</p>
+                            </div>
+                            <div class="type-card" data-type="skill">
+                                <h3>Skill Certification</h3>
+                                <p>For skill validation</p>
+                            </div>
+                            <div class="type-card" data-type="internship">
+                                <h3>Internship Completion</h3>
+                                <p>For completed internships</p>
+                            </div>
+                            <div class="type-card" data-type="appreciation">
+                                <h3>Appreciation</h3>
+                                <p>For recognition</p>
+                            </div>
+                            <div class="type-card" data-type="custom">
+                                <h3>Custom</h3>
+                                <p>Write your own content</p>
+                            </div>
+                        </div>
+                        <div class="cert-content-editor hidden">
+                            <h3>Certificate Content</h3>
+                            <textarea id="certContent" rows="6"></textarea>
+                        </div>
+                        <div class="step-nav">
+                            <button type="button" class="prev-btn">← Previous</button>
+                            <button type="button" class="next-btn glow-button">Next →</button>
+                        </div>
+                    </div>
+                    
+                    <!-- Step 3: Template Selection -->
+                    <div id="step3" class="step-content">
+                        <h2>Template Selection</h2>
+                        <div class="template-grid">
+                            <div class="template-card" data-template="regal">
+                                <div class="template-preview regal"></div>
+                                <h3>Regal Gold</h3>
+                                <p>Academic/Formal</p>
+                            </div>
+                            <div class="template-card" data-template="minimalist">
+                                <div class="template-preview minimalist"></div>
+                                <h3>Minimalist Dark</h3>
+                                <p>Tech/Design</p>
+                            </div>
+                            <div class="template-card" data-template="infographic">
+                                <div class="template-preview infographic"></div>
+                                <h3>Infographic Panel</h3>
+                                <p>Bootcamps/Skills</p>
+                            </div>
+                            <div class="template-card" data-template="watercolor">
+                                <div class="template-preview watercolor"></div>
+                                <h3>Watercolor Art</h3>
+                                <p>NGOs/Creatives</p>
+                            </div>
+                            <div class="template-card" data-template="geometric">
+                                <div class="template-preview geometric"></div>
+                                <h3>Geometric Teal</h3>
+                                <p>Engineering</p>
+                            </div>
+                            <div class="template-card" data-template="corporate">
+                                <div class="template-preview corporate"></div>
+                                <h3>Corporate Blue</h3>
+                                <p>Corporate Training</p>
+                            </div>
+                            <div class="template-card" data-template="gradient">
+                                <div class="template-preview gradient"></div>
+                                <h3>Gradient Flow</h3>
+                                <p>Creative Tech</p>
+                            </div>
+                            <div class="template-card" data-template="classic">
+                                <div class="template-preview classic"></div>
+                                <h3>Classic Frame</h3>
+                                <p>Universities</p>
+                            </div>
+                            <div class="template-card" data-template="pastel">
+                                <div class="template-preview pastel"></div>
+                                <h3>Soft Pastel</h3>
+                                <p>Online Courses</p>
+                            </div>
+                            <div class="template-card" data-template="borderless">
+                                <div class="template-preview borderless"></div>
+                                <h3>Borderless Bold</h3>
+                                <p>Digital Credentials</p>
+                            </div>
+                            <div class="template-card" data-template="custom">
+                                <div class="template-preview custom">
+                                    <span>+</span>
+                                </div>
+                                <h3>Upload Custom</h3>
+                                <p>Branded Templates</p>
+                                <input type="file" id="customTemplate" accept="image/*" class="hidden">
+                            </div>
+                        </div>
+                        <div class="step-nav">
+                            <button type="button" class="prev-btn">← Previous</button>
+                            <button type="button" class="next-btn glow-button">Next →</button>
+                        </div>
+                    </div>
+                    
+                    <!-- Step 4: Design Customizer -->
+                    <div id="step4" class="step-content">
+                        <h2>Design Customizer</h2>
+                        <div class="design-options">
+                            <div class="option-group">
+                                <h3>Fonts</h3>
+                                <div class="form-group">
+                                    <label for="headerFont">Header Font</label>
+                                    <select id="headerFont">
+                                        <option value="Cormorant Garamond">Cormorant Garamond</option>
+                                        <option value="Inter">Inter</option>
+                                        <option value="Sora">Sora</option>
+                                        <option value="Roboto Mono">Roboto Mono</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="nameFont">Name Font</label>
+                                    <select id="nameFont">
+                                        <option value="Cormorant Garamond">Cormorant Garamond</option>
+                                        <option value="Inter">Inter</option>
+                                        <option value="Sora">Sora</option>
+                                        <option value="Roboto Mono">Roboto Mono</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="bodyFont">Body Font</label>
+                                    <select id="bodyFont">
+                                        <option value="Cormorant Garamond">Cormorant Garamond</option>
+                                        <option value="Inter">Inter</option>
+                                        <option value="Sora">Sora</option>
+                                        <option value="Roboto Mono">Roboto Mono</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <div class="option-group">
+                                <h3>Font Sizes</h3>
+                                <div class="form-group">
+                                    <label for="headerSize">Header Size: <span id="headerSizeValue">36</span>px</label>
+                                    <input type="range" id="headerSize" min="24" max="60" value="36">
+                                </div>
+                                <div class="form-group">
+                                    <label for="nameSize">Name Size: <span id="nameSizeValue">48</span>px</label>
+                                    <input type="range" id="nameSize" min="36" max="72" value="48">
+                                </div>
+                                <div class="form-group">
+                                    <label for="bodySize">Body Size: <span id="bodySizeValue">20</span>px</label>
+                                    <input type="range" id="bodySize" min="14" max="28" value="20">
+                                </div>
+                            </div>
+                            
+                            <div class="option-group">
+                                <h3>Colors</h3>
+                                <div class="form-group">
+                                    <label for="textColor">Text Color</label>
+                                    <input type="color" id="textColor" value="#333333">
+                                </div>
+                                <div class="form-group">
+                                    <label for="nameColor">Name Color</label>
+                                    <input type="color" id="nameColor" value="#1a365d">
+                                </div>
+                            </div>
+                            
+                            <div class="option-group">
+                                <h3>Logo & Signature</h3>
+                                <div class="form-group">
+                                    <label for="logoUpload">Upload Logo</label>
+                                    <input type="file" id="logoUpload" accept="image/*">
+                                </div>
+                                <div class="form-group">
+                                    <label for="signatureUpload">Upload Signature</label>
+                                    <input type="file" id="signatureUpload" accept="image/*">
+                                </div>
+                            </div>
+                            
+                            <div class="option-group">
+                                <h3>Options</h3>
+                                <div class="form-group checkbox">
+                                    <input type="checkbox" id="showBorder" checked>
+                                    <label for="showBorder">Show Border</label>
+                                </div>
+                                <div class="form-group">
+                                    <label for="shadowIntensity">Shadow Intensity: <span id="shadowValue">5</span>px</label>
+                                    <input type="range" id="shadowIntensity" min="0" max="20" value="5">
+                                </div>
+                                <div class="form-group">
+                                    <label for="textAlignment">Text Alignment</label>
+                                    <select id="textAlignment">
+                                        <option value="center">Center</option>
+                                        <option value="left">Left</option>
+                                        <option value="right">Right</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="step-nav">
+                            <button type="button" class="prev-btn">← Previous</button>
+                            <button type="button" class="next-btn glow-button">Next →</button>
+                        </div>
+                    </div>
+                    
+                    <!-- Step 5: Final Export -->
+                    <div id="step5" class="step-content">
+                        <h2>Final Export</h2>
+                        <div class="export-options">
+                            <button id="exportPdf" class="export-btn">📄 Export as PDF</button>
+                            <button id="exportJpg" class="export-btn">🖼️ Export as JPG</button>
+                            <button id="printCert" class="export-btn">🖨️ Print Certificate</button>
+                        </div>
+                        <div class="step-nav">
+                            <button type="button" class="prev-btn">← Previous</button>
+                            <button id="saveCert" type="button" class="glow-button">💾 Save Certificate</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Certificate Preview -->
+                <div class="preview-container">
+                    <div id="certificatePreview" class="certificate">
+                        <div class="certificate-header">
+                            <div class="certificate-logo-container">
+                                <div class="certificate-logo"></div>
+                                <div class="certificate-org"></div>
+                            </div>
+                            <h1 class="certificate-title">Certificate of Completion</h1>
+                        </div>
+                        <div class="certificate-body">
+                            <p class="certificate-text">This certifies that</p>
+                            <h2 class="recipient-name">Recipient Name</h2>
+                            <p class="certificate-content">has successfully completed the requirements and demonstrated proficiency in the subject matter.</p>
+                        </div>
+                        <div class="certificate-footer">
+                            <div class="certificate-qr-container">
+                                <p class="certificate-id">CERT-2025-0001</p>
+                                <div class="certificate-qr"></div>
+                            </div>
+                            <div class="certificate-signature">
+                                <div class="signature-image"></div>
+                                <div class="provider-info">
+                                    <p class="provider-name">Provider Name</p>
+                                    <p class="provider-designation">Provider Designation</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Certificate Manager -->
+        <section id="manager" class="screen">
+            <div class="glass-card">
+                <h2>Certificate Manager</h2>
+                <div class="manager-controls">
+                    <div class="search-box">
+                        <input type="text" id="certSearch" placeholder="Search certificates...">
+                        <button id="searchBtn">🔍</button>
+                    </div>
+                    <div class="filter-group">
+                        <label for="typeFilter">Filter by Type:</label>
+                        <select id="typeFilter">
+                            <option value="all">All Types</option>
+                            <option value="technical">Technical Internship</option>
+                            <option value="research">Research Internship</option>
+                            <option value="ngo">NGO Volunteering</option>
+                            <option value="campus">Campus Ambassador</option>
+                            <option value="freelance">Freelance Project</option>
+                            <option value="course">Course Completion</option>
+                            <option value="bootcamp">Bootcamp</option>
+                            <option value="skill">Skill Certification</option>
+                            <option value="internship">Internship Completion</option>
+                            <option value="appreciation">Appreciation</option>
+                            <option value="custom">Custom</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label for="statusFilter">Filter by Status:</label>
+                        <select id="statusFilter">
+                            <option value="all">All Statuses</option>
+                            <option value="verified">Verified</option>
+                            <option value="waiting">Waiting</option>
+                            <option value="not-verified">Not Verified</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="certificate-table-container">
+                    <table id="certificateTable">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>Type</th>
+                                <th>Cert ID</th>
+                                <th>Issue Date</th>
+                                <th>Template</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Certificates will be inserted here -->
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="pagination">
+                    <button id="prevPage">← Previous</button>
+                    <span id="pageInfo">Page 1 of 1</span>
+                    <button id="nextPage">Next →</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Admin Settings -->
+        <section id="settings" class="screen">
+            <div class="glass-card">
+                <h2>Admin Settings</h2>
+                
+                <div class="settings-tabs">
+                    <div class="settings-tab active" data-tab="admin">Admin Details</div>
+                    <div class="settings-tab" data-tab="data">Data Management</div>
+                    <div class="settings-tab" data-tab="defaults">Defaults</div>
+                </div>
+                
+                <div class="settings-content">
+                    <!-- Admin Details Tab -->
+                    <div id="adminTab" class="settings-pane active">
+                        <h3>Update Admin Details</h3>
+                        <form id="adminForm">
+                            <div class="form-group">
+                                <label for="currentEmail">Current Email</label>
+                                <input type="email" id="currentEmail" readonly>
+                            </div>
+                            <div class="form-group">
+                                <label for="newEmail">New Email</label>
+                                <input type="email" id="newEmail">
+                            </div>
+                            <div class="form-group">
+                                <label for="currentPassword">Current Password</label>
+                                <input type="password" id="currentPassword">
+                            </div>
+                            <div class="form-group">
+                                <label for="newPassword">New Password</label>
+                                <input type="password" id="newPassword">
+                            </div>
+                            <div class="form-group">
+                                <label for="confirmNewPassword">Confirm New Password</label>
+                                <input type="password" id="confirmNewPassword">
+                            </div>
+                            <button type="submit" class="glow-button">Update Details</button>
+                        </form>
+                    </div>
+                    
+                    <!-- Data Management Tab -->
+                    <div id="dataTab" class="settings-pane">
+                        <h3>Data Management</h3>
+                        <div class="data-actions">
+                            <button id="exportData" class="data-btn">Export All Data</button>
+                            <button id="importData" class="data-btn">Import Data</button>
+                            <input type="file" id="dataFile" accept=".json" class="hidden">
+                        </div>
+                        
+                        <div class="reset-options">
+                            <h4>Reset Options</h4>
+                            <button id="softReset" class="reset-btn">Soft Reset (Certificates Only)</button>
+                            <button id="hardReset" class="reset-btn danger">Hard Reset (Full Wipe)</button>
+                        </div>
+                    </div>
+                    
+                    <!-- Defaults Tab -->
+                    <div id="defaultsTab" class="settings-pane">
+                        <h3>Default Settings</h3>
+                        <form id="defaultsForm">
+                            <div class="form-group">
+                                <label for="defaultProviderName">Default Provider Name</label>
+                                <input type="text" id="defaultProviderName">
+                            </div>
+                            <div class="form-group">
+                                <label for="defaultProviderDesignation">Default Provider Designation</label>
+                                <input type="text" id="defaultProviderDesignation">
+                            </div>
+                            <div class="form-group">
+                                <label for="defaultLogo">Default Logo</label>
+                                <input type="file" id="defaultLogo" accept="image/*">
+                                <div id="defaultLogoPreview" class="image-preview"></div>
+                            </div>
+                            <div class="form-group">
+                                <label for="defaultSignature">Default Signature</label>
+                                <input type="file" id="defaultSignature" accept="image/*">
+                                <div id="defaultSignaturePreview" class="image-preview"></div>
+                            </div>
+                            <button type="submit" class="glow-button">Save Defaults</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script src="cg.js"></script>
+</body>
+</html>
